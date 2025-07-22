@@ -1,334 +1,1345 @@
 <!DOCTYPE html>
+
 <html lang="ar" dir="rtl">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة مين فينا...؟</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Cairo', sans-serif;
-            background: #0f172a; /* bg-slate-900 */
-        }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
-        }
-        .player-btn {
-            transition: all 0.2s ease-in-out;
-        }
-        .player-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 15px rgba(236, 72, 153, 0.5); /* pink-500 shadow */
-        }
-    </style>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>لعبة ملك المعلومات</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <style>
+
+        body {
+
+            font-family: 'Cairo', sans-serif;
+
+            overscroll-behavior-y: contain;
+
+        }
+
+        @keyframes fadeIn {
+
+            from { opacity: 0; transform: translateY(-10px); }
+
+            to { opacity: 1; transform: translateY(0); }
+
+        }
+
+        .fade-in {
+
+            animation: fadeIn 0.5s ease-out forwards;
+
+        }
+
+        .option-btn {
+
+            transition: all 0.2s ease-in-out;
+
+        }
+
+        .option-btn:hover {
+
+            transform: translateY(-2px);
+
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+
+        }
+
+        #timer-bar-inner {
+
+            transition: width 1s linear;
+
+        }
+
+        /* Toggle Switch */
+
+        .toggle-checkbox:checked {
+
+            right: 0;
+
+            border-color: #3b82f6;
+
+        }
+
+        .toggle-checkbox:checked + .toggle-label {
+
+            background-color: #3b82f6;
+
+        }
+
+    </style>
+
 </head>
-<body class="text-gray-200 flex items-center justify-center min-h-screen p-4">
 
-    <div id="app" class="container mx-auto max-w-md w-full">
+<body class="bg-gray-100 text-gray-800 flex items-center justify-center min-h-screen">
 
-        <!-- شاشة الإعداد -->
-        <div id="setup-view" class="glass-card p-6 sm:p-8 rounded-2xl shadow-xl fade-in">
-            <header class="text-center mb-6">
-                <h1 class="text-4xl font-bold text-white">مين فينا...؟</h1>
-                <p class="text-gray-400 mt-1">لعبة التفاهم بينكم</p>
-            </header>
 
-            <div class="space-y-4 mb-8">
-                <div>
-                    <label for="player1-name-input" class="block mb-2 text-lg font-semibold text-gray-100">الاسم الأول</label>
-                    <input type="text" id="player1-name-input" placeholder="اكتب الاسم هنا" class="w-full p-3 border-2 bg-gray-800 border-gray-600 rounded-lg focus:border-pink-500 focus:ring-pink-500 transition text-white">
-                </div>
-                <div>
-                    <label for="player2-name-input" class="block mb-2 text-lg font-semibold text-gray-100">الاسم الثاني</label>
-                    <input type="text" id="player2-name-input" placeholder="اكتب الاسم هنا" class="w-full p-3 border-2 bg-gray-800 border-gray-600 rounded-lg focus:border-pink-500 focus:ring-pink-500 transition text-white">
-                </div>
-            </div>
 
-            <button id="start-game-btn" class="w-full bg-pink-600 text-white font-black py-4 px-8 rounded-lg hover:bg-pink-700 transition shadow-lg text-2xl disabled:bg-gray-600 disabled:cursor-not-allowed" disabled>يلا بينا</button>
-        </div>
+    <div id="app" class="container mx-auto p-4 max-w-2xl w-full">
 
-        <!-- شاشة دور اللاعب -->
-        <div id="turn-view" class="hidden glass-card p-6 sm:p-8 rounded-2xl shadow-xl fade-in text-center">
-             <div class="flex justify-between items-center mb-4 text-gray-400 font-bold">
-                <div id="score-display" class="text-xl">النتيجة: 0</div>
-                <div id="question-counter" class="text-xl"></div>
-            </div>
-            <p id="turn-text" class="text-2xl font-bold text-white mb-4"></p>
-            <p id="instruction-text" class="text-gray-400 mb-6"></p>
 
-            <div class="bg-gray-800 p-6 rounded-lg mb-6 min-h-[120px] flex items-center justify-center">
-                <h2 id="question-text" class="text-2xl text-center font-semibold text-white"></h2>
-            </div>
-            
-            <div id="options-container" class="grid grid-cols-2 gap-4">
-                <button id="p1-btn" class="player-btn w-full text-xl font-bold p-6 rounded-lg bg-teal-600 text-white"></button>
-                <button id="p2-btn" class="player-btn w-full text-xl font-bold p-6 rounded-lg bg-purple-600 text-white"></button>
-            </div>
-        </div>
-        
-        <!-- شاشة إظهار النتيجة -->
-        <div id="reveal-view" class="hidden glass-card p-8 rounded-2xl shadow-xl text-center fade-in">
-            <h2 id="reveal-title" class="text-4xl font-bold mb-4"></h2>
-            <p id="reveal-details" class="text-lg text-gray-300 mb-6"></p>
-            <button id="next-question-btn" class="w-full bg-pink-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-pink-700 transition text-xl">السؤال اللي بعده</button>
-        </div>
 
-        <!-- شاشة النتائج النهائية -->
-        <div id="results-view" class="hidden glass-card p-8 rounded-2xl shadow-xl text-center fade-in">
-            <h1 class="text-4xl font-bold text-white mb-2">خلصنا!</h1>
-            <p class="text-gray-300 text-xl mb-4">نتيجتكم النهائية هي:</p>
-            <p id="final-score" class="text-6xl font-black text-pink-400 mb-8"></p>
-            
-            <button id="analyze-btn" class="w-full bg-purple-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-purple-700 transition mb-4">✨ حلل نسبة تفاهمنا</button>
-            <div id="analysis-result" class="mt-4 text-gray-300 bg-gray-800 p-4 rounded-lg hidden"></div>
-            
-            <button id="play-again-btn" class="w-full mt-8 bg-teal-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-teal-600 transition">نلعب تاني</button>
-        </div>
+        <!-- شاشة الإعداد -->
 
-    </div>
-    
-    <!-- Loading Overlay -->
-    <div id="loading-overlay" class="hidden fixed inset-0 bg-black bg-opacity-80 flex flex-col items-center justify-center p-4 z-50">
-        <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-24 w-24 mb-4 animate-spin"></div>
-        <h2 id="loading-text" class="text-center text-white text-xl font-semibold"></h2>
-    </div>
+        <div id="setup-view" class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl fade-in">
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            let gameState = {};
-            let QUESTIONS = [];
-            const TOTAL_QUESTIONS = 15;
+            <header class="text-center mb-6">
 
-            const views = { setup: document.getElementById('setup-view'), turn: document.getElementById('turn-view'), reveal: document.getElementById('reveal-view'), results: document.getElementById('results-view'), };
-            const player1NameInput = document.getElementById('player1-name-input');
-            const player2NameInput = document.getElementById('player2-name-input');
-            const startGameBtn = document.getElementById('start-game-btn');
-            const scoreDisplay = document.getElementById('score-display');
-            const questionCounter = document.getElementById('question-counter');
-            const turnText = document.getElementById('turn-text');
-            const instructionText = document.getElementById('instruction-text');
-            const questionText = document.getElementById('question-text');
-            const p1Btn = document.getElementById('p1-btn');
-            const p2Btn = document.getElementById('p2-btn');
-            const revealTitle = document.getElementById('reveal-title');
-            const revealDetails = document.getElementById('reveal-details');
-            const nextQuestionBtn = document.getElementById('next-question-btn');
-            const finalScore = document.getElementById('final-score');
-            const analyzeBtn = document.getElementById('analyze-btn');
-            const analysisResult = document.getElementById('analysis-result');
-            const playAgainBtn = document.getElementById('play-again-btn');
-            const loadingOverlay = document.getElementById('loading-overlay');
-            const loadingText = document.getElementById('loading-text');
+                <h1 class="text-4xl font-bold text-blue-600">ملك المعلومات</h1>
 
-            function showView(viewName) {
-                Object.values(views).forEach(view => view.classList.add('hidden'));
-                views[viewName].classList.remove('hidden');
-            }
+                <p class="text-gray-500 mt-1">لعبة الذكاء والمعرفة العامة</p>
 
-            function init() {
-                gameState = { players: [{}, {}], score: 0, currentQuestionIndex: 0, p1Answer: null };
-                loadNamesFromStorage();
-                showView('setup');
-            }
+            </header>
 
-            function validateSetup() {
-                const name1 = player1NameInput.value.trim();
-                const name2 = player2NameInput.value.trim();
-                startGameBtn.disabled = !(name1 && name2);
-            }
-            
-            function saveNamesToStorage() {
-                localStorage.setItem('whosMoreLikelyPlayer1', gameState.players[0].name);
-                localStorage.setItem('whosMoreLikelyPlayer2', gameState.players[1].name);
-            }
 
-            function loadNamesFromStorage() {
-                const savedPlayer1 = localStorage.getItem('whosMoreLikelyPlayer1');
-                const savedPlayer2 = localStorage.getItem('whosMoreLikelyPlayer2');
-                if (savedPlayer1) player1NameInput.value = savedPlayer1;
-                if (savedPlayer2) player2NameInput.value = savedPlayer2;
-                validateSetup();
-            }
 
-            async function startGame() {
-                const name1 = player1NameInput.value.trim();
-                const name2 = player2NameInput.value.trim();
-                if (!name1 || !name2) return;
+            <div class="mb-6">
 
-                gameState.players[0].name = name1;
-                gameState.players[1].name = name2;
-                saveNamesToStorage();
+                <div class="flex justify-between items-center mb-3">
 
-                loadingText.textContent = "بنحضر أسئلة جديدة ليكوا...";
-                loadingOverlay.classList.remove('hidden');
-                
-                const success = await fetchAiQuestions();
-                if (!success) {
-                    alert("حصل مشكلة في تحضير الأسئلة، ممكن تتأكدوا من النت وتجربوا تاني.");
-                    loadingOverlay.classList.add('hidden');
-                    return;
-                }
+                    <h2 class="text-xl font-bold text-gray-700">أضف اللاعبين</h2>
 
-                loadingOverlay.classList.add('hidden');
-                gameState.score = 0;
-                gameState.currentQuestionIndex = 0;
-                scoreDisplay.textContent = `النتيجة: 0`;
-                prepareTurn(0);
-            }
-            
-            async function fetchAiQuestions() {
-                const prompt = `أنت مصمم ألعاب فرفوش بتعمل لعبة اسمها "مين فينا...؟" بالعامية المصرية لاتنين مرتبطين. اعمل ${TOTAL_QUESTIONS} سؤال جديد ومختلف بصيغة "مين فيكم أكتر واحد ممكن...؟". الأسئلة تكون مضحكة ومواقف من الحياة اليومية.\n\nطلع النتيجة في صيغة JSON مظبوطة: array فيها ${TOTAL_QUESTIONS} string، كل string هو سؤال.`;
-                const payload = {
-                    contents: [{ role: "user", parts: [{ text: prompt }] }],
-                    generationConfig: { responseMimeType: "application/json", responseSchema: { type: "OBJECT", properties: { questions: { type: "ARRAY", items: { type: "STRING" } } }, required: ["questions"] } }
-                };
+                    <button id="clear-players-btn" class="text-sm text-red-500 hover:underline">مسح كل اللاعبين</button>
 
-                try {
-                    const apiKey = "AIzaSyARMAvjPVNEuGezl2_04KXLVoX3V9Iz2x8"; 
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) return false;
-                    const result = await response.json();
-                    const jsonText = result.candidates[0].content.parts[0].text;
-                    const parsedJson = JSON.parse(jsonText);
-                    if (parsedJson.questions && parsedJson.questions.length >= TOTAL_QUESTIONS) {
-                        QUESTIONS = parsedJson.questions;
-                        return true;
-                    }
-                    return false;
-                } catch (error) {
-                    console.error("Error fetching AI questions:", error);
-                    return false;
-                }
-            }
+                </div>
 
-            function prepareTurn(playerIndex) {
-                const currentPlayer = gameState.players[playerIndex];
-                const otherPlayer = gameState.players[(playerIndex + 1) % 2];
-                
-                questionText.textContent = QUESTIONS[gameState.currentQuestionIndex];
-                questionCounter.textContent = `السؤال ${gameState.currentQuestionIndex + 1} / ${TOTAL_QUESTIONS}`;
-                
-                if (playerIndex === 0) { // Player 1's turn
-                    turnText.textContent = `دور ${currentPlayer.name}`;
-                    instructionText.textContent = `يا ${otherPlayer.name}، غمضي عينك ومتشفيش!`;
-                    p1Btn.textContent = `أنا (${currentPlayer.name})`;
-                    p2Btn.textContent = otherPlayer.name;
-                } else { // Player 2's turn
-                    turnText.textContent = `دورك يا ${currentPlayer.name}`;
-                    instructionText.textContent = `نفس السؤال... اختاري من غير ما تتكلموا!`;
-                    p1Btn.textContent = otherPlayer.name;
-                    p2Btn.textContent = `أنا (${currentPlayer.name})`;
-                }
-                showView('turn');
-            }
+                <div class="flex gap-2">
 
-            function handleAnswer(chosenPlayerIndex) {
-                const isP1Turn = gameState.p1Answer === null;
-                if (isP1Turn) {
-                    gameState.p1Answer = chosenPlayerIndex;
-                    // Simple transition screen
-                    turnText.textContent = `تمام! ادي الموبايل لـ ${gameState.players[1].name}`;
-                    instructionText.textContent = 'اضغطي "أنا جاهزة" لما تكوني مستعدة';
-                    document.getElementById('options-container').classList.add('hidden');
-                    const readyBtn = document.createElement('button');
-                    readyBtn.textContent = 'أنا جاهزة';
-                    readyBtn.className = 'w-full mt-6 bg-teal-500 text-white font-bold py-3 px-6 rounded-lg';
-                    readyBtn.onclick = () => {
-                        document.getElementById('options-container').classList.remove('hidden');
-                        readyBtn.remove();
-                        prepareTurn(1);
-                    };
-                    turnText.parentElement.appendChild(readyBtn);
-                } else {
-                    const p2Answer = chosenPlayerIndex;
-                    const p1Answer = gameState.p1Answer;
-                    
-                    if (p1Answer === p2Answer) {
-                        gameState.score++;
-                        revealTitle.textContent = "اتفقتوا! 🎉";
-                        revealTitle.className = "text-4xl font-bold mb-4 text-green-400";
-                        revealDetails.textContent = `برافو عليكوا! انتوا الاتنين اخترتوا "${gameState.players[p1Answer].name}"`;
-                    } else {
-                        revealTitle.textContent = "اختلفتوا 🤷‍♂️";
-                        revealTitle.className = "text-4xl font-bold mb-4 text-yellow-400";
-                        revealDetails.textContent = `${gameState.players[0].name} اختار "${gameState.players[p1Answer].name}"، لكن ${gameState.players[1].name} اختارت "${gameState.players[p2Answer].name}"`;
-                    }
-                    
-                    scoreDisplay.textContent = `النتيجة: ${gameState.score}`;
-                    gameState.p1Answer = null; // Reset for next question
-                    showView('reveal');
-                }
-            }
+                    <input type="text" id="player-name-input" placeholder="أدخل اسم اللاعب" class="flex-grow p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 transition">
 
-            function nextQuestion() {
-                gameState.currentQuestionIndex++;
-                if (gameState.currentQuestionIndex >= TOTAL_QUESTIONS) {
-                    showFinalResults();
-                } else {
-                    prepareTurn(0);
-                }
-            }
-            
-            function showFinalResults() {
-                finalScore.textContent = `${gameState.score} / ${TOTAL_QUESTIONS}`;
-                analysisResult.classList.add('hidden'); // Hide previous analysis
-                showView('results');
-            }
-            
-            async function analyzeCompatibility() {
-                analysisResult.textContent = "الذكاء الاصطناعي بيفكر...";
-                analysisResult.classList.remove('hidden');
+                    <button id="add-player-btn" class="bg-blue-500 text-white font-bold py-3 px-5 rounded-lg hover:bg-blue-600 transition shadow">إضافة</button>
 
-                const { score } = gameState;
-                const [p1, p2] = gameState.players;
-                
-                const prompt = `أنت خبير علاقات فرفوش وبتتكلم بالعامية المصرية. قدامك نتيجة لعبة "مين فينا...؟" بين "${p1.name}" و "${p2.name}". نتيجتهم كانت ${score} من ${TOTAL_QUESTIONS}.\n\nبناءً على النتيجة دي بس، اكتب تحليل صغير ومضحك عن "نسبة التفاهم" بينهم. كل ما النتيجة كانت أعلى، كل ما كان الكلام إيجابي أكتر. لو النتيجة قليلة، خلي الكلام هزار عن إنهم محتاجين يقعدوا مع بعض أكتر.`;
-                const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+                </div>
 
-                try {
-                    const apiKey = "AIzaSyARMAvjPVNEuGezl2_04KXLVoX3V9Iz2x8"; 
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    let analysisText = "حصلت مشكلة في التحليل.";
-                    if (response.ok) {
-                        const result = await response.json();
-                        if (result.candidates && result.candidates[0]?.content?.parts[0]?.text) {
-                            analysisText = result.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
-                        }
-                    }
-                    analysisResult.innerHTML = analysisText;
-                } catch (error) {
-                    analysisResult.textContent = "فشل الاتصال بالسيرفر.";
-                }
-            }
+                <ul id="player-list" class="list-none p-0 mt-3 space-y-2"></ul>
 
-            // --- Event Listeners ---
-            player1NameInput.addEventListener('input', validateSetup);
-            player2NameInput.addEventListener('input', validateSetup);
-            startGameBtn.addEventListener('click', startGame);
-            playAgainBtn.addEventListener('click', init);
-            p1Btn.addEventListener('click', () => handleAnswer(0));
-            p2Btn.addEventListener('click', () => handleAnswer(1));
-            nextQuestionBtn.addEventListener('click', nextQuestion);
-            analyzeBtn.addEventListener('click', analyzeCompatibility);
+            </div>
 
-            // --- Initial Load ---
-            init();
-        });
-    </script>
+            
+
+            <div class="mb-6">
+
+                <h2 class="text-xl font-bold mb-3 text-gray-700">اختر أو أنشئ الفئات</h2>
+
+                 <div id="ai-category-creator" class="mb-3">
+
+                     <div class="flex gap-2">
+
+                         <input type="text" id="custom-category-input" placeholder="اكتب موضوعًا (مثل: تاريخ الأندلس)" class="flex-grow p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 transition">
+
+                         <button id="add-category-btn" class="bg-blue-500 text-white font-bold py-3 px-5 rounded-lg hover:bg-blue-600 transition shadow">✨ أضف</button>
+
+                     </div>
+
+                 </div>
+
+                 <div id="category-tags" class="flex flex-wrap gap-2 mb-3">
+
+                     <!-- Custom category tags will be added here -->
+
+                 </div>
+
+                 <p class="text-sm text-gray-500 mb-3">أو اختر من الاقتراحات:</p>
+
+                 <div id="category-suggestions" class="flex flex-wrap gap-2">
+
+                     <!-- Default category suggestions -->
+
+                 </div>
+
+            </div>
+
+            
+
+            <div class="mb-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+
+                <div class="flex items-center justify-between">
+
+                    <label for="local-questions-toggle" class="text-lg font-bold text-gray-800">استخدام الأسئلة المحلية فقط</label>
+
+                    <div class="relative inline-block w-14 mr-2 align-middle select-none transition duration-200 ease-in">
+
+                        <input type="checkbox" name="local-questions-toggle" id="local-questions-toggle" class="toggle-checkbox absolute block w-7 h-7 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+
+                        <label for="local-questions-toggle" class="toggle-label block overflow-hidden h-7 rounded-full bg-gray-300 cursor-pointer"></label>
+
+                    </div>
+
+                </div>
+
+                <p class="text-sm text-gray-500 mt-2">فعّل هذا الخيار إذا كنت لا تريد استخدام الإنترنت أو واجهت مشكلة في الاتصال.</p>
+
+            </div>
+
+
+
+            <button id="start-game-btn" class="w-full bg-teal-500 text-white font-black py-4 px-8 rounded-lg hover:bg-teal-600 transition shadow-lg text-2xl disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>ابدأ اللعبة</button>
+
+        </div>
+
+
+
+        <!-- شاشة تمرير الهاتف -->
+
+        <div id="pass-phone-view" class="hidden bg-white p-8 rounded-2xl shadow-xl text-center fade-in">
+
+            <h2 id="pass-to-player-name" class="text-3xl font-bold text-gray-800 mb-2"></h2>
+
+            <p id="pass-info" class="text-lg text-gray-600 mb-6"></p>
+
+            <button id="start-turn-btn" class="w-full bg-teal-500 text-white font-bold py-4 px-8 rounded-lg hover:bg-teal-600 transition shadow-lg text-2xl">أنا جاهز!</button>
+
+        </div>
+
+
+
+        <!-- شاشة اللعب (الأسئلة) -->
+
+        <div id="game-view" class="hidden bg-white p-6 sm:p-8 rounded-2xl shadow-xl fade-in">
+
+            <div class="flex justify-between items-center mb-2 text-gray-600 font-bold">
+
+                <div id="player-turn-name"></div>
+
+                <div id="question-counter"></div>
+
+            </div>
+
+            <div id="timer-bar" class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+
+                <div id="timer-bar-inner" class="bg-blue-600 h-2.5 rounded-full" style="width: 100%"></div>
+
+            </div>
+
+            <div class="bg-gray-100 p-6 rounded-lg mb-6 min-h-[100px] flex items-center justify-center">
+
+                <h2 id="question-text" class="text-2xl text-center font-semibold"></h2>
+
+            </div>
+
+            <div id="options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                <!-- Options will be injected here -->
+
+            </div>
+
+        </div>
+
+
+
+        <!-- شاشة نهاية الجولة / كسر التعادل -->
+
+        <div id="round-end-view" class="hidden bg-white p-8 rounded-2xl shadow-xl text-center fade-in">
+
+            <h2 id="round-end-title" class="text-3xl font-bold text-blue-600 mb-4"></h2>
+
+            <p class="text-lg text-gray-600 mb-6">النتائج النهائية للجولة:</p>
+
+            <ul id="round-scores" class="space-y-3 text-lg mb-8">
+
+                <!-- Scores will be injected here -->
+
+            </ul>
+
+            <button id="next-action-btn" class="w-full bg-blue-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-600 transition shadow-lg text-xl"></button>
+
+        </div>
+
+        
+
+        <!-- شاشة الفائز النهائي -->
+
+        <div id="winner-view" class="hidden bg-white p-8 rounded-2xl shadow-xl text-center fade-in">
+
+            <div class="text-amber-400 text-6xl mb-4">👑</div>
+
+            <h2 class="text-4xl font-black text-amber-500 mb-2">الفائز هو!</h2>
+
+            <p id="winner-name" class="text-5xl font-bold text-gray-800 mb-6"></p>
+
+            <button id="analyze-performance-btn" class="w-full mb-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:from-purple-600 hover:to-indigo-700 transition">✨ تحليل أدائي</button>
+
+            <button id="play-again-btn" class="w-full bg-teal-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-teal-600 transition">العب مرة أخرى</button>
+
+        </div>
+
+
+
+    </div>
+
+
+
+    <!-- Modal for clearing players -->
+
+    <div id="clear-players-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+
+        <div class="bg-white p-6 rounded-2xl shadow-xl text-center max-w-sm w-full">
+
+            <h3 class="text-xl font-bold mb-4">مسح اللاعبين</h3>
+
+            <p class="text-gray-600 mb-6">هل أنت متأكد أنك تريد مسح قائمة اللاعبين المحفوظة؟ لا يمكن التراجع عن هذا الإجراء.</p>
+
+            <div class="flex justify-center gap-4">
+
+                <button id="cancel-clear-btn" class="bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-300">إلغاء</button>
+
+                <button id="confirm-clear-btn" class="bg-red-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-600">نعم، امسح</button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    
+
+    <!-- Modal for Performance Analysis -->
+
+    <div id="analysis-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+
+        <div class="bg-white p-6 rounded-2xl shadow-xl max-w-lg w-full">
+
+            <h3 class="text-2xl font-bold mb-4 text-center text-indigo-600">✨ تحليل الأداء ✨</h3>
+
+            <div id="analysis-content" class="text-gray-700 text-lg leading-relaxed space-y-4 max-h-[60vh] overflow-y-auto p-2">
+
+                <!-- Analysis content will be injected here -->
+
+            </div>
+
+            <div class="flex justify-center mt-6">
+
+                <button id="close-analysis-btn" class="bg-gray-200 text-gray-800 font-bold py-2 px-8 rounded-lg hover:bg-gray-300">إغلاق</button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    
+
+    <!-- Loading Overlay -->
+
+    <div id="loading-overlay" class="hidden fixed inset-0 bg-black bg-opacity-60 flex flex-col items-center justify-center p-4 z-50">
+
+        <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-24 w-24 mb-4 animate-spin"></div>
+
+        <h2 id="loading-text" class="text-center text-white text-xl font-semibold"></h2>
+
+    </div>
+
+
+
+
+
+    <script>
+
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- بنك الأسئلة المحلي (احتياطي) ---
+
+            const QUESTIONS = {
+
+                general: { name: "معلومات عامة", items: [ { q: "ما هي عاصمة مصر؟", o: ["القاهرة", "الإسكندرية", "الجيزة", "الأقصر"], a: "القاهرة" }, { q: "من رسم الموناليزا؟", o: ["فان جوخ", "بيكاسو", "ليوناردو دافنشي", "مايكل أنجلو"], a: "ليوناردو دافنشي" }, { q: "ما هي العملة الرسمية لليابان؟", o: ["اليوان", "الوون", "الدولار", "الين"], a: "الين" }, { q: "في أي رياضة يُعرف محمد علي كلاي؟", o: ["كرة القدم", "الملاكمة", "كرة السلة", "التنس"], a: "الملاكمة" }, ] },
+
+                science: { name: "علوم وتكنولوجيا", items: [ { q: "كم عدد قارات العالم؟", o: ["5", "6", "7", "8"], a: "7" }, { q: "ما هو أكبر كوكب في المجموعة الشمسية؟", o: ["الأرض", "المريخ", "المشتري", "زحل"], a: "المشتري" }, { q: "ما هو الرمز الكيميائي للماء؟", o: ["H2O", "CO2", "O2", "NaCl"], a: "H2O" }, ] },
+
+                history: { name: "تاريخ وجغرافيا", items: [ { q: "من هو أول إنسان مشى على سطح القمر؟", o: ["باز ألدرين", "يوري جاجارين", "نيل أرمسترونج", "مايكل كولينز"], a: "نيل أرمسترونج" }, { q: "ما هو أطول نهر في العالم؟", o: ["الأمازون", "النيل", "المسيسيبي", "اليانغتسي"], a: "النيل" }, ] },
+
+                islamic: { name: "إسلاميات", items: [ { q: "ما هي أول سورة نزلت في القرآن الكريم كاملة؟", o: ["العلق", "الفاتحة", "الإخلاص", "الكوثر"], a: "الفاتحة" }, { q: "من هو الصحابي الذي لقب بـ 'سيف الله المسلول'؟", o: ["عمر بن الخطاب", "علي بن أبي طالب", "خالد بن الوليد", "أبو بكر الصديق"], a: "خالد بن الوليد" }, ] },
+
+                hard: { name: "أسئلة صعبة", items: [ { q: "في أي عام انتهت الحرب العالمية الثانية؟", o: ["1943", "1945", "1947", "1950"], a: "1945" }, { q: "ما هو العنصر الذي يمتلك الرمز الكيميائي 'Au'؟", o: ["الفضة", "الذهب", "النحاس", "الألومنيوم"], a: "الذهب" }, ] }
+
+            };
+
+            const QUESTION_TIME = 15;
+
+
+
+            // --- متغيرات الحالة ---
+
+            let gameState = {};
+
+            let timerInterval;
+
+
+
+            // --- المؤثرات الصوتية ---
+
+            let sounds = {};
+
+            let audioReady = false;
+
+
+
+            function setupAudio() {
+
+                sounds.tick = new Tone.Synth({ oscillator: { type: "sine" }, envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 } }).toDestination();
+
+                sounds.timeUp = new Tone.Synth({ oscillator: { type: "square" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } }).toDestination();
+
+                sounds.click = new Tone.MembraneSynth().toDestination();
+
+                sounds.nextPlayer = new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } }).toDestination();
+
+                audioReady = true;
+
+            }
+
+
+
+            // --- عناصر الواجهة ---
+
+            const views = { setup: document.getElementById('setup-view'), passPhone: document.getElementById('pass-phone-view'), game: document.getElementById('game-view'), roundEnd: document.getElementById('round-end-view'), winner: document.getElementById('winner-view') };
+
+            const playerNameInput = document.getElementById('player-name-input');
+
+            const addPlayerBtn = document.getElementById('add-player-btn');
+
+            const playerList = document.getElementById('player-list');
+
+            const categorySuggestions = document.getElementById('category-suggestions');
+
+            const customCategoryInput = document.getElementById('custom-category-input');
+
+            const addCategoryBtn = document.getElementById('add-category-btn');
+
+            const categoryTags = document.getElementById('category-tags');
+
+            const startGameBtn = document.getElementById('start-game-btn');
+
+            const passToPlayerName = document.getElementById('pass-to-player-name');
+
+            const passInfo = document.getElementById('pass-info');
+
+            const startTurnBtn = document.getElementById('start-turn-btn');
+
+            const playerTurnName = document.getElementById('player-turn-name');
+
+            const questionCounter = document.getElementById('question-counter');
+
+            const timerBarInner = document.getElementById('timer-bar-inner');
+
+            const questionText = document.getElementById('question-text');
+
+            const optionsContainer = document.getElementById('options-container');
+
+            const roundEndTitle = document.getElementById('round-end-title');
+
+            const roundScores = document.getElementById('round-scores');
+
+            const nextActionBtn = document.getElementById('next-action-btn');
+
+            const winnerName = document.getElementById('winner-name');
+
+            const playAgainBtn = document.getElementById('play-again-btn');
+
+            const clearPlayersModal = document.getElementById('clear-players-modal');
+
+            const clearPlayersBtn = document.getElementById('clear-players-btn');
+
+            const cancelClearBtn = document.getElementById('cancel-clear-btn');
+
+            const confirmClearBtn = document.getElementById('confirm-clear-btn');
+
+            const localQuestionsToggle = document.getElementById('local-questions-toggle');
+
+            const loadingOverlay = document.getElementById('loading-overlay');
+
+            const loadingText = document.getElementById('loading-text');
+
+            const analyzePerformanceBtn = document.getElementById('analyze-performance-btn');
+
+            const analysisModal = document.getElementById('analysis-modal');
+
+            const analysisContent = document.getElementById('analysis-content');
+
+            const closeAnalysisBtn = document.getElementById('close-analysis-btn');
+
+
+
+            function init() {
+
+                gameState = { players: [], activePlayers: [], selectedCategories: [], questionPool: [], turnIndex: 0, questionsPerRound: 10, isTieBreaker: false, };
+
+                loadPlayersFromStorage();
+
+                renderPlayerList();
+
+                renderCategorySuggestions();
+
+                renderCategoryTags();
+
+                showView('setup');
+
+            }
+
+
+
+            function showView(viewName) {
+
+                Object.values(views).forEach(view => view.classList.add('hidden'));
+
+                views[viewName].classList.remove('hidden');
+
+            }
+
+            
+
+            function savePlayersToStorage() {
+
+                const playerNames = gameState.players.map(p => p.name);
+
+                localStorage.setItem('quizMasterPlayers', JSON.stringify(playerNames));
+
+            }
+
+
+
+            function loadPlayersFromStorage() {
+
+                const savedPlayers = localStorage.getItem('quizMasterPlayers');
+
+                if (savedPlayers) {
+
+                    const playerNames = JSON.parse(savedPlayers);
+
+                    gameState.players = playerNames.map(name => ({ name, score: 0, questionsAnswered: 0 }));
+
+                }
+
+            }
+
+
+
+            function renderPlayerList() {
+
+                playerList.innerHTML = '';
+
+                gameState.players.forEach((player, index) => {
+
+                    const li = document.createElement('li');
+
+                    li.className = 'flex justify-between items-center bg-gray-100 p-2 rounded-lg text-lg';
+
+                    li.textContent = player.name;
+
+                    const removeBtn = document.createElement('button');
+
+                    removeBtn.textContent = '×';
+
+                    removeBtn.className = 'text-red-500 font-bold text-2xl hover:text-red-700';
+
+                    removeBtn.onclick = () => removePlayer(index);
+
+                    li.appendChild(removeBtn);
+
+                    playerList.appendChild(li);
+
+                });
+
+                validateSetup();
+
+            }
+
+            
+
+            function renderCategorySuggestions() {
+
+                categorySuggestions.innerHTML = '';
+
+                Object.values(QUESTIONS).forEach(cat => {
+
+                    if (cat.name === 'أسئلة صعبة') return;
+
+                    const button = document.createElement('button');
+
+                    button.textContent = cat.name;
+
+                    button.className = 'bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-300';
+
+                    button.onclick = () => addCategory(cat.name);
+
+                    categorySuggestions.appendChild(button);
+
+                });
+
+            }
+
+
+
+            function renderCategoryTags() {
+
+                categoryTags.innerHTML = '';
+
+                gameState.selectedCategories.forEach((cat, index) => {
+
+                    const tag = document.createElement('div');
+
+                    tag.className = 'flex items-center bg-blue-500 text-white text-md font-semibold px-3 py-1 rounded-full';
+
+                    tag.textContent = cat;
+
+                    const removeBtn = document.createElement('button');
+
+                    removeBtn.textContent = '×';
+
+                    removeBtn.className = 'text-white font-bold mr-2 text-lg hover:text-blue-200';
+
+                    removeBtn.onclick = () => removeCategory(index);
+
+                    tag.prepend(removeBtn);
+
+                    categoryTags.appendChild(tag);
+
+                });
+
+                validateSetup();
+
+            }
+
+            
+
+            function addCategory(categoryName) {
+
+                const name = categoryName.trim();
+
+                if (name && !gameState.selectedCategories.includes(name)) {
+
+                    gameState.selectedCategories.push(name);
+
+                    renderCategoryTags();
+
+                }
+
+                customCategoryInput.value = '';
+
+            }
+
+            
+
+            function removeCategory(index) {
+
+                gameState.selectedCategories.splice(index, 1);
+
+                renderCategoryTags();
+
+            }
+
+
+
+            function validateSetup() {
+
+                startGameBtn.disabled = !(gameState.players.length >= 1 && gameState.selectedCategories.length > 0);
+
+            }
+
+
+
+            function addPlayer() {
+
+                const name = playerNameInput.value.trim();
+
+                if (name) {
+
+                    if (gameState.players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+
+                        playerNameInput.value = '';
+
+                        return;
+
+                    }
+
+                    gameState.players.push({ name, score: 0, questionsAnswered: 0 });
+
+                    playerNameInput.value = '';
+
+                    renderPlayerList();
+
+                    savePlayersToStorage();
+
+                }
+
+                playerNameInput.focus();
+
+            }
+
+
+
+            function removePlayer(index) {
+
+                gameState.players.splice(index, 1);
+
+                renderPlayerList();
+
+                savePlayersToStorage();
+
+            }
+
+
+
+            async function startGame() {
+
+                if (!audioReady) setupAudio();
+
+                
+
+                loadingText.textContent = 'جاري تحضير الأسئلة...';
+
+                loadingOverlay.classList.remove('hidden');
+
+
+
+                let useLocal = localQuestionsToggle.checked;
+
+                let questionsReady = false;
+
+
+
+                // **LOGIC CHANGE**: Always try to fetch AI questions unless local is explicitly checked.
+
+                if (!useLocal) {
+
+                    loadingText.textContent = 'جاري جلب أسئلة جديدة من الإنترنت...';
+
+                    const success = await fetchAiQuestions();
+
+                    if (success) {
+
+                        questionsReady = true;
+
+                    } else {
+
+                        // Fallback to local if AI fetch fails
+
+                        loadingText.textContent = 'فشل جلب الأسئلة، سيتم استخدام الأسئلة المحلية.';
+
+                        // Add a small delay so user can read the message
+
+                        await new Promise(resolve => setTimeout(resolve, 1500)); 
+
+                    }
+
+                }
+
+
+
+                // If questions are still not ready (either because local was checked, or AI fetch failed)
+
+                if (!questionsReady) {
+
+                    populateLocalQuestions();
+
+                }
+
+                
+
+                loadingOverlay.classList.add('hidden');
+
+                
+
+                gameState.activePlayers = [...gameState.players];
+
+                gameState.activePlayers.forEach(p => { p.score = 0; p.questionsAnswered = 0; });
+
+                gameState.isTieBreaker = false;
+
+                gameState.questionsPerRound = 10;
+
+                gameState.turnIndex = 0;
+
+                prepareTurn();
+
+            }
+
+
+
+            function populateLocalQuestions() {
+
+                let basePool = [];
+
+                // Find matching local categories
+
+                gameState.selectedCategories.forEach(catName => {
+
+                    const localCat = Object.values(QUESTIONS).find(c => c.name === catName);
+
+                    if (localCat) {
+
+                        basePool.push(...localCat.items);
+
+                    }
+
+                });
+
+                // If no local categories match AT ALL, use general as fallback
+
+                if (basePool.length === 0) {
+
+                    basePool.push(...QUESTIONS.general.items);
+
+                }
+
+                gameState.questionPool = [...basePool].sort(() => 0.5 - Math.random());
+
+            }
+
+
+
+            async function fetchAiQuestions() {
+
+                const categoryNames = gameState.selectedCategories.join(', ');
+
+                const prompt = `Generate 20 quiz questions in Arabic about the following topics: ${categoryNames}. Make the questions varied in difficulty. Ensure each question has 4 options and one correct answer. The correct answer must be one of the four options.`;
+
+
+
+                const payload = {
+
+                    contents: [{ role: "user", parts: [{ text: prompt }] }],
+
+                    generationConfig: {
+
+                        responseMimeType: "application/json",
+
+                        responseSchema: {
+
+                            type: "OBJECT",
+
+                            properties: {
+
+                                questions: {
+
+                                    type: "ARRAY",
+
+                                    description: "A list of quiz questions.",
+
+                                    items: {
+
+                                        type: "OBJECT",
+
+                                        properties: {
+
+                                            q: { type: "STRING", description: "The question text." },
+
+                                            o: { type: "ARRAY", description: "An array of 4 possible answers.", items: { type: "STRING" } },
+
+                                            a: { type: "STRING", description: "The correct answer, must be one of the options in 'o'." }
+
+                                        },
+
+                                        required: ["q", "o", "a"]
+
+                                    }
+
+                                }
+
+                            },
+
+                            required: ["questions"]
+
+                        }
+
+                    }
+
+                };
+
+                
+
+                try {
+
+                    const apiKey = ""; // Left empty for automatic injection
+
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                    const response = await fetch(apiUrl, {
+
+                        method: 'POST',
+
+                        headers: { 'Content-Type': 'application/json' },
+
+                        body: JSON.stringify(payload)
+
+                    });
+
+
+
+                    if (!response.ok) {
+
+                        console.error("API response not OK:", response.status, response.statusText);
+
+                        return false;
+
+                    }
+
+
+
+                    const result = await response.json();
+
+                    
+
+                    if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+
+                        const jsonText = result.candidates[0].content.parts[0].text;
+
+                        const parsedJson = JSON.parse(jsonText);
+
+                        if (parsedJson.questions && parsedJson.questions.length > 0) {
+
+                            gameState.questionPool = parsedJson.questions.sort(() => 0.5 - Math.random());
+
+                            return true;
+
+                        }
+
+                    }
+
+                    console.error("Unexpected API response structure:", result);
+
+                    return false;
+
+                } catch (error) {
+
+                    console.error("Error fetching AI questions:", error);
+
+                    return false;
+
+                }
+
+            }
+
+
+
+
+
+            function prepareTurn() {
+
+                if (audioReady) sounds.nextPlayer.triggerAttackRelease("C4", "0.2");
+
+                const currentPlayer = gameState.activePlayers[gameState.turnIndex % gameState.activePlayers.length];
+
+                passToPlayerName.textContent = `دور ${currentPlayer.name}`;
+
+                passInfo.textContent = gameState.isTieBreaker ? `استعد لسؤال كسر التعادل!` : `استعد لسؤالك رقم ${currentPlayer.questionsAnswered + 1}`;
+
+                showView('passPhone');
+
+            }
+
+
+
+            function startTurn() {
+
+                displayQuestion();
+
+                showView('game');
+
+            }
+
+
+
+            function displayQuestion() {
+
+                // **LOGIC CHANGE**: If the pool is empty mid-game, try fetching more before defaulting to local.
+
+                if (gameState.questionPool.length === 0) {
+
+                     // Simple fallback for mid-game depletion. A more robust solution could fetch more AI questions.
+
+                    populateLocalQuestions(); 
+
+                }
+
+                const question = gameState.isTieBreaker ? [...QUESTIONS.hard.items].sort(() => 0.5 - Math.random())[0] : gameState.questionPool.pop();
+
+                gameState.currentQuestion = question;
+
+                const currentPlayer = gameState.activePlayers[gameState.turnIndex % gameState.activePlayers.length];
+
+                playerTurnName.textContent = currentPlayer.name;
+
+                questionCounter.textContent = `السؤال ${currentPlayer.questionsAnswered + 1} / ${gameState.questionsPerRound}`;
+
+                questionText.textContent = question.q;
+
+                optionsContainer.innerHTML = '';
+
+                const shuffledOptions = [...question.o].sort(() => 0.5 - Math.random());
+
+                shuffledOptions.forEach(option => {
+
+                    const button = document.createElement('button');
+
+                    button.textContent = option;
+
+                    button.className = 'option-btn w-full text-lg font-semibold p-4 border-2 border-gray-300 rounded-lg bg-white hover:bg-gray-100';
+
+                    button.onclick = () => handleAnswer(option);
+
+                    optionsContainer.appendChild(button);
+
+                });
+
+                startTimer();
+
+            }
+
+
+
+            function startTimer() {
+
+                let timeLeft = QUESTION_TIME;
+
+                timerBarInner.style.width = '100%';
+
+                timerBarInner.classList.remove('bg-red-500');
+
+                timerBarInner.classList.add('bg-blue-600');
+
+
+
+                timerInterval = setInterval(() => {
+
+                    timeLeft--;
+
+                    const percentage = (timeLeft / QUESTION_TIME) * 100;
+
+                    timerBarInner.style.width = `${percentage}%`;
+
+
+
+                    if (timeLeft <= 5) {
+
+                        timerBarInner.classList.remove('bg-blue-600');
+
+                        timerBarInner.classList.add('bg-red-500');
+
+                        if (audioReady) sounds.tick.triggerAttackRelease("C5", "0.1");
+
+                    }
+
+
+
+                    if (timeLeft <= 0) {
+
+                        handleTimeUp();
+
+                    }
+
+                }, 1000);
+
+            }
+
+
+
+            function stopTimer() {
+
+                clearInterval(timerInterval);
+
+            }
+
+
+
+            function handleAnswer(selectedOption) {
+
+                stopTimer();
+
+                if (audioReady) sounds.click.triggerAttackRelease("C3", "0.1");
+
+                const currentPlayer = gameState.activePlayers[gameState.turnIndex % gameState.activePlayers.length];
+
+                if(currentPlayer) {
+
+                    const correctAnswer = gameState.currentQuestion.a;
+
+                    if (selectedOption === correctAnswer) {
+
+                        currentPlayer.score++;
+
+                    }
+
+                    currentPlayer.questionsAnswered++;
+
+                }
+
+                moveToNextTurn();
+
+            }
+
+
+
+            function handleTimeUp() {
+
+                stopTimer();
+
+                if (views.game.classList.contains('hidden')) { return; }
+
+                if (audioReady) sounds.timeUp.triggerAttackRelease("A3", "0.3");
+
+                const currentPlayer = gameState.activePlayers[gameState.turnIndex % gameState.activePlayers.length];
+
+                if (currentPlayer) {
+
+                    currentPlayer.questionsAnswered++;
+
+                }
+
+                moveToNextTurn();
+
+            }
+
+            
+
+            function moveToNextTurn() {
+
+                gameState.turnIndex++;
+
+                const totalTurns = gameState.activePlayers.length * gameState.questionsPerRound;
+
+
+
+                if (gameState.turnIndex >= totalTurns) {
+
+                    setTimeout(endRound, 300);
+
+                } else {
+
+                    setTimeout(prepareTurn, 300);
+
+                }
+
+            }
+
+
+
+            function endRound() {
+
+                stopTimer();
+
+                const sortedPlayers = [...gameState.activePlayers].sort((a, b) => b.score - a.score);
+
+                const highestScore = sortedPlayers.length > 0 ? sortedPlayers[0].score : 0;
+
+                const tiedPlayers = sortedPlayers.filter(p => p.score === highestScore);
+
+                roundScores.innerHTML = '';
+
+                sortedPlayers.forEach(p => {
+
+                    const li = document.createElement('li');
+
+                    li.className = `flex justify-between items-center p-3 rounded-lg ${p.score === highestScore ? 'bg-amber-100 font-bold' : 'bg-gray-100'}`;
+
+                    li.innerHTML = `<span>${p.name}</span><span>${p.score} نقطة</span>`;
+
+                    roundScores.appendChild(li);
+
+                });
+
+                if (tiedPlayers.length === 1) {
+
+                    winnerName.textContent = tiedPlayers[0].name;
+
+                    showView('winner');
+
+                } else {
+
+                    roundEndTitle.textContent = "كسر التعادل!";
+
+                    nextActionBtn.textContent = "ابدأ جولة كسر التعادل";
+
+                    nextActionBtn.onclick = () => startTieBreaker(tiedPlayers);
+
+                    showView('roundEnd');
+
+                }
+
+            }
+
+
+
+            function startTieBreaker(tiedPlayers) {
+
+                gameState.activePlayers = tiedPlayers;
+
+                gameState.activePlayers.forEach(p => { p.score = 0; p.questionsAnswered = 0; });
+
+                gameState.isTieBreaker = true;
+
+                gameState.questionsPerRound = 5;
+
+                gameState.turnIndex = 0;
+
+                prepareTurn();
+
+            }
+
+            
+
+            async function analyzePerformance() {
+
+                loadingText.textContent = 'جاري تحليل أدائك...';
+
+                loadingOverlay.classList.remove('hidden');
+
+
+
+                const winner = gameState.activePlayers.find(p => p.name === winnerName.textContent);
+
+                const categories = gameState.selectedCategories.join(', ');
+
+                const prompt = `A quiz player named "${winner.name}" has just won a game. The game categories were: ${categories}. Write a short, fun, and encouraging performance analysis for them in Arabic. Congratulate them, mention they are a master of the chosen topics, and give them one interesting and surprising fun fact related to one of the categories.`;
+
+                
+
+                const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+
+                try {
+
+                    const apiKey = ""; // Left empty
+
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                    const response = await fetch(apiUrl, {
+
+                        method: 'POST',
+
+                        headers: { 'Content-Type': 'application/json' },
+
+                        body: JSON.stringify(payload)
+
+                    });
+
+                    const result = await response.json();
+
+                    let analysisText = "حدث خطأ أثناء تحليل الأداء. حاول مرة أخرى!";
+
+                    if (result.candidates && result.candidates[0]?.content?.parts[0]?.text) {
+
+                        analysisText = result.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
+
+                    }
+
+                    analysisContent.innerHTML = analysisText;
+
+
+
+                } catch (error) {
+
+                    console.error("Error analyzing performance:", error);
+
+                    analysisContent.textContent = "لا يمكن الاتصال بالخادم لتحليل الأداء. يرجى التحقق من اتصالك بالإنترنت.";
+
+                } finally {
+
+                    loadingOverlay.classList.add('hidden');
+
+                    analysisModal.classList.remove('hidden');
+
+                }
+
+            }
+
+
+
+
+
+            // --- Event Listeners ---
+
+            addPlayerBtn.addEventListener('click', addPlayer);
+
+            playerNameInput.addEventListener('keypress', (e) => e.key === 'Enter' && addPlayer());
+
+            addCategoryBtn.addEventListener('click', () => addCategory(customCategoryInput.value));
+
+            customCategoryInput.addEventListener('keypress', (e) => e.key === 'Enter' && addCategory(customCategoryInput.value));
+
+            
+
+            startGameBtn.addEventListener('click', startGame);
+
+            startTurnBtn.addEventListener('click', () => {
+
+                if (!audioReady) {
+
+                    Tone.start();
+
+                    setupAudio();
+
+                }
+
+                startTurn();
+
+            });
+
+            playAgainBtn.addEventListener('click', init);
+
+
+
+            clearPlayersBtn.addEventListener('click', () => {
+
+                clearPlayersModal.classList.remove('hidden');
+
+            });
+
+
+
+            cancelClearBtn.addEventListener('click', () => {
+
+                clearPlayersModal.classList.add('hidden');
+
+            });
+
+
+
+            confirmClearBtn.addEventListener('click', () => {
+
+                localStorage.removeItem('quizMasterPlayers');
+
+                gameState.players = [];
+
+                renderPlayerList();
+
+                clearPlayersModal.classList.add('hidden');
+
+            });
+
+            
+
+            analyzePerformanceBtn.addEventListener('click', analyzePerformance);
+
+            closeAnalysisBtn.addEventListener('click', () => {
+
+                analysisModal.classList.add('hidden');
+
+            });
+
+
+
+            // --- Initial Load ---
+
+            init();
+
+        });
+
+    </script>
+
+
 
 </body>
+
 </html>
