@@ -31,7 +31,7 @@
         #timer-bar-inner {
             transition: width 1s linear;
         }
-        /* AI Toggle Switch */
+        /* Toggle Switch */
         .toggle-checkbox:checked {
             right: 0;
             border-color: #3b82f6;
@@ -71,15 +71,15 @@
                 </div>
             </div>
             
-            <div class="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div class="mb-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">
                 <div class="flex items-center justify-between">
-                    <label for="ai-questions-toggle" class="text-lg font-bold text-blue-800">أسئلة من الإنترنت (AI)</label>
+                    <label for="local-questions-toggle" class="text-lg font-bold text-gray-800">استخدام الأسئلة المحلية</label>
                     <div class="relative inline-block w-14 mr-2 align-middle select-none transition duration-200 ease-in">
-                        <input type="checkbox" name="ai-questions-toggle" id="ai-questions-toggle" class="toggle-checkbox absolute block w-7 h-7 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
-                        <label for="ai-questions-toggle" class="toggle-label block overflow-hidden h-7 rounded-full bg-gray-300 cursor-pointer"></label>
+                        <input type="checkbox" name="local-questions-toggle" id="local-questions-toggle" class="toggle-checkbox absolute block w-7 h-7 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                        <label for="local-questions-toggle" class="toggle-label block overflow-hidden h-7 rounded-full bg-gray-300 cursor-pointer"></label>
                     </div>
                 </div>
-                <p class="text-sm text-gray-500 mt-2">فعّل هذا الخيار لجلب أسئلة جديدة ومتنوعة من الإنترنت في كل مرة تلعب فيها!</p>
+                <p class="text-sm text-gray-500 mt-2">بشكل افتراضي، ستحاول اللعبة جلب أسئلة جديدة من الإنترنت. فعّل هذا الخيار لاستخدام الأسئلة المحفوظة فقط.</p>
             </div>
 
             <button id="start-game-btn" class="w-full bg-teal-500 text-white font-black py-4 px-8 rounded-lg hover:bg-teal-600 transition shadow-lg text-2xl disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>ابدأ اللعبة</button>
@@ -201,7 +201,7 @@
             const clearPlayersBtn = document.getElementById('clear-players-btn');
             const cancelClearBtn = document.getElementById('cancel-clear-btn');
             const confirmClearBtn = document.getElementById('confirm-clear-btn');
-            const aiQuestionsToggle = document.getElementById('ai-questions-toggle');
+            const localQuestionsToggle = document.getElementById('local-questions-toggle');
             const loadingOverlay = document.getElementById('loading-overlay');
 
             function init() {
@@ -298,13 +298,18 @@
                 
                 loadingOverlay.classList.remove('hidden');
 
-                if (aiQuestionsToggle.checked) {
+                let useLocal = localQuestionsToggle.checked;
+                let questionsReady = false;
+
+                if (!useLocal) {
                     const success = await fetchAiQuestions();
-                    if (!success) {
-                        // Fallback to local questions if AI fetch fails
-                        populateLocalQuestions();
+                    if (success) {
+                        questionsReady = true;
                     }
-                } else {
+                }
+
+                if (!questionsReady) {
+                    // Fallback to local if user chose them OR if AI fetch failed
                     populateLocalQuestions();
                 }
                 
@@ -402,8 +407,6 @@
 
             function displayQuestion() {
                 if (gameState.questionPool.length === 0) {
-                    // This is a fallback if the pool empties unexpectedly.
-                    // In a real game, this might indicate the end, but here we'll just repopulate.
                     populateLocalQuestions();
                 }
                 const question = gameState.isTieBreaker ? [...QUESTIONS.hard.items].sort(() => 0.5 - Math.random())[0] : gameState.questionPool.pop();
