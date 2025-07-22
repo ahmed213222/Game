@@ -45,7 +45,10 @@
             </header>
 
             <div class="mb-6">
-                <h2 class="text-xl font-bold mb-3 text-gray-700">أضف اللاعبين</h2>
+                 <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-xl font-bold text-gray-700">أضف اللاعبين</h2>
+                    <button id="clear-players-btn" class="text-sm text-red-500 hover:underline">مسح كل اللاعبين</button>
+                </div>
                 <div class="flex gap-2">
                     <input type="text" id="player-name-input" placeholder="أدخل اسم اللاعب" class="flex-grow p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 transition">
                     <button id="add-player-btn" class="bg-blue-500 text-white font-bold py-3 px-5 rounded-lg hover:bg-blue-600 transition shadow">إضافة</button>
@@ -107,6 +110,19 @@
 
     </div>
 
+    <!-- Modal for clearing players -->
+    <div id="clear-players-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-6 rounded-2xl shadow-xl text-center max-w-sm w-full">
+            <h3 class="text-xl font-bold mb-4">مسح اللاعبين</h3>
+            <p class="text-gray-600 mb-6">هل أنت متأكد أنك تريد مسح قائمة اللاعبين المحفوظة؟ لا يمكن التراجع عن هذا الإجراء.</p>
+            <div class="flex justify-center gap-4">
+                <button id="cancel-clear-btn" class="bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-300">إلغاء</button>
+                <button id="confirm-clear-btn" class="bg-red-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-600">نعم، امسح</button>
+            </div>
+        </div>
+    </div>
+
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- بنك الأسئلة (نفس البنك السابق) ---
@@ -155,9 +171,14 @@
             const nextActionBtn = document.getElementById('next-action-btn');
             const winnerName = document.getElementById('winner-name');
             const playAgainBtn = document.getElementById('play-again-btn');
+            const clearPlayersModal = document.getElementById('clear-players-modal');
+            const clearPlayersBtn = document.getElementById('clear-players-btn');
+            const cancelClearBtn = document.getElementById('cancel-clear-btn');
+            const confirmClearBtn = document.getElementById('confirm-clear-btn');
 
             function init() {
                 gameState = { players: [], activePlayers: [], selectedCategories: [], questionPool: [], turnIndex: 0, questionsPerRound: 10, isTieBreaker: false, };
+                loadPlayersFromStorage();
                 renderPlayerList();
                 renderCategories();
                 showView('setup');
@@ -166,6 +187,19 @@
             function showView(viewName) {
                 Object.values(views).forEach(view => view.classList.add('hidden'));
                 views[viewName].classList.remove('hidden');
+            }
+            
+            function savePlayersToStorage() {
+                const playerNames = gameState.players.map(p => p.name);
+                localStorage.setItem('quizMasterPlayers', JSON.stringify(playerNames));
+            }
+
+            function loadPlayersFromStorage() {
+                const savedPlayers = localStorage.getItem('quizMasterPlayers');
+                if (savedPlayers) {
+                    const playerNames = JSON.parse(savedPlayers);
+                    gameState.players = playerNames.map(name => ({ name, score: 0, questionsAnswered: 0 }));
+                }
             }
 
             function renderPlayerList() {
@@ -213,9 +247,16 @@
             function addPlayer() {
                 const name = playerNameInput.value.trim();
                 if (name) {
+                    if (gameState.players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+                        // This is a simple alert, but for better UX a custom modal would be better.
+                        // However, per instructions, avoiding alerts. We can just ignore the add.
+                        playerNameInput.value = '';
+                        return;
+                    }
                     gameState.players.push({ name, score: 0, questionsAnswered: 0 });
                     playerNameInput.value = '';
                     renderPlayerList();
+                    savePlayersToStorage();
                 }
                 playerNameInput.focus();
             }
@@ -223,6 +264,7 @@
             function removePlayer(index) {
                 gameState.players.splice(index, 1);
                 renderPlayerList();
+                savePlayersToStorage();
             }
 
             function startGame() {
@@ -382,6 +424,21 @@
                 startTurn();
             });
             playAgainBtn.addEventListener('click', init);
+
+            clearPlayersBtn.addEventListener('click', () => {
+                clearPlayersModal.classList.remove('hidden');
+            });
+
+            cancelClearBtn.addEventListener('click', () => {
+                clearPlayersModal.classList.add('hidden');
+            });
+
+            confirmClearBtn.addEventListener('click', () => {
+                localStorage.removeItem('quizMasterPlayers');
+                gameState.players = [];
+                renderPlayerList();
+                clearPlayersModal.classList.add('hidden');
+            });
 
             // --- Initial Load ---
             init();
