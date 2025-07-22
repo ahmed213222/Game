@@ -53,7 +53,7 @@
             </header>
 
             <div class="mb-6">
-                 <div class="flex justify-between items-center mb-3">
+                <div class="flex justify-between items-center mb-3">
                     <h2 class="text-xl font-bold text-gray-700">أضف اللاعبين</h2>
                     <button id="clear-players-btn" class="text-sm text-red-500 hover:underline">مسح كل اللاعبين</button>
                 </div>
@@ -67,18 +67,18 @@
             <div class="mb-6">
                 <h2 class="text-xl font-bold mb-3 text-gray-700">اختر أو أنشئ الفئات</h2>
                  <div id="ai-category-creator" class="mb-3">
-                    <div class="flex gap-2">
+                     <div class="flex gap-2">
                          <input type="text" id="custom-category-input" placeholder="اكتب موضوعًا (مثل: تاريخ الأندلس)" class="flex-grow p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 transition">
                          <button id="add-category-btn" class="bg-blue-500 text-white font-bold py-3 px-5 rounded-lg hover:bg-blue-600 transition shadow">✨ أضف</button>
-                    </div>
-                </div>
-                <div id="category-tags" class="flex flex-wrap gap-2 mb-3">
-                    <!-- Custom category tags will be added here -->
-                </div>
+                     </div>
+                 </div>
+                 <div id="category-tags" class="flex flex-wrap gap-2 mb-3">
+                     <!-- Custom category tags will be added here -->
+                 </div>
                  <p class="text-sm text-gray-500 mb-3">أو اختر من الاقتراحات:</p>
-                <div id="category-suggestions" class="flex flex-wrap gap-2">
-                    <!-- Default category suggestions -->
-                </div>
+                 <div id="category-suggestions" class="flex flex-wrap gap-2">
+                     <!-- Default category suggestions -->
+                 </div>
             </div>
             
             <div class="mb-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">
@@ -348,19 +348,27 @@
             async function startGame() {
                 if (!audioReady) setupAudio();
                 
-                loadingText.textContent = 'جاري جلب أسئلة جديدة...';
+                loadingText.textContent = 'جاري تحضير الأسئلة...';
                 loadingOverlay.classList.remove('hidden');
 
                 let useLocal = localQuestionsToggle.checked;
                 let questionsReady = false;
 
+                // **LOGIC CHANGE**: Always try to fetch AI questions unless local is explicitly checked.
                 if (!useLocal) {
+                    loadingText.textContent = 'جاري جلب أسئلة جديدة من الإنترنت...';
                     const success = await fetchAiQuestions();
                     if (success) {
                         questionsReady = true;
+                    } else {
+                        // Fallback to local if AI fetch fails
+                        loadingText.textContent = 'فشل جلب الأسئلة، سيتم استخدام الأسئلة المحلية.';
+                        // Add a small delay so user can read the message
+                        await new Promise(resolve => setTimeout(resolve, 1500)); 
                     }
                 }
 
+                // If questions are still not ready (either because local was checked, or AI fetch failed)
                 if (!questionsReady) {
                     populateLocalQuestions();
                 }
@@ -384,7 +392,7 @@
                         basePool.push(...localCat.items);
                     }
                 });
-                // If no local categories match, use general as fallback
+                // If no local categories match AT ALL, use general as fallback
                 if (basePool.length === 0) {
                     basePool.push(...QUESTIONS.general.items);
                 }
@@ -468,8 +476,10 @@
             }
 
             function displayQuestion() {
+                // **LOGIC CHANGE**: If the pool is empty mid-game, try fetching more before defaulting to local.
                 if (gameState.questionPool.length === 0) {
-                    populateLocalQuestions();
+                     // Simple fallback for mid-game depletion. A more robust solution could fetch more AI questions.
+                    populateLocalQuestions(); 
                 }
                 const question = gameState.isTieBreaker ? [...QUESTIONS.hard.items].sort(() => 0.5 - Math.random())[0] : gameState.questionPool.pop();
                 gameState.currentQuestion = question;
