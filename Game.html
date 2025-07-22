@@ -226,7 +226,7 @@
             }
 
             function startGame() {
-                if (!audioReady) setupAudio(); // Initialize audio on first user interaction
+                if (!audioReady) setupAudio();
                 let basePool = [];
                 gameState.selectedCategories.forEach(catKey => { basePool.push(...QUESTIONS[catKey].items); });
                 gameState.questionPool = [...basePool].sort(() => 0.5 - Math.random());
@@ -239,12 +239,8 @@
             }
 
             function prepareTurn() {
-                const currentPlayer = gameState.activePlayers[gameState.turnIndex % gameState.activePlayers.length];
-                if (currentPlayer.questionsAnswered >= gameState.questionsPerRound) {
-                    endRound();
-                    return;
-                }
                 if (audioReady) sounds.nextPlayer.triggerAttackRelease("C4", "0.2");
+                const currentPlayer = gameState.activePlayers[gameState.turnIndex % gameState.activePlayers.length];
                 passToPlayerName.textContent = `دور ${currentPlayer.name}`;
                 passInfo.textContent = gameState.isTieBreaker ? `استعد لسؤال كسر التعادل!` : `استعد لسؤالك رقم ${currentPlayer.questionsAnswered + 1}`;
                 showView('passPhone');
@@ -306,33 +302,44 @@
                 clearInterval(timerInterval);
             }
 
-            function handleTimeUp() {
-                stopTimer();
-                if (audioReady) sounds.timeUp.triggerAttackRelease("A3", "0.3");
-                const currentPlayer = gameState.activePlayers[gameState.turnIndex % gameState.activePlayers.length];
-                currentPlayer.questionsAnswered++;
-                setTimeout(() => {
-                    gameState.turnIndex++;
-                    prepareTurn();
-                }, 300);
-            }
-
             function handleAnswer(selectedOption) {
                 stopTimer();
                 if (audioReady) sounds.click.triggerAttackRelease("C3", "0.1");
                 const currentPlayer = gameState.activePlayers[gameState.turnIndex % gameState.activePlayers.length];
-                const correctAnswer = gameState.currentQuestion.a;
-                if (selectedOption === correctAnswer) {
-                    currentPlayer.score++;
+                if(currentPlayer) {
+                    const correctAnswer = gameState.currentQuestion.a;
+                    if (selectedOption === correctAnswer) {
+                        currentPlayer.score++;
+                    }
+                    currentPlayer.questionsAnswered++;
                 }
-                currentPlayer.questionsAnswered++;
-                setTimeout(() => {
-                    gameState.turnIndex++;
-                    prepareTurn();
-                }, 300);
+                moveToNextTurn();
+            }
+
+            function handleTimeUp() {
+                stopTimer();
+                if (views.game.classList.contains('hidden')) { return; }
+                if (audioReady) sounds.timeUp.triggerAttackRelease("A3", "0.3");
+                const currentPlayer = gameState.activePlayers[gameState.turnIndex % gameState.activePlayers.length];
+                if (currentPlayer) {
+                    currentPlayer.questionsAnswered++;
+                }
+                moveToNextTurn();
+            }
+            
+            function moveToNextTurn() {
+                gameState.turnIndex++;
+                const totalTurns = gameState.activePlayers.length * gameState.questionsPerRound;
+
+                if (gameState.turnIndex >= totalTurns) {
+                    setTimeout(endRound, 300);
+                } else {
+                    setTimeout(prepareTurn, 300);
+                }
             }
 
             function endRound() {
+                stopTimer();
                 const sortedPlayers = [...gameState.activePlayers].sort((a, b) => b.score - a.score);
                 const highestScore = sortedPlayers.length > 0 ? sortedPlayers[0].score : 0;
                 const tiedPlayers = sortedPlayers.filter(p => p.score === highestScore);
