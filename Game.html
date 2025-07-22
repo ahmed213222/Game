@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة ملك المعلومات</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            overscroll-behavior-y: contain;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        .option-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .option-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        #timer-bar-inner {
+            transition: width 1s linear;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex items-center justify-center min-h-screen">
+
+    <div id="app" class="container mx-auto p-4 max-w-2xl w-full">
+
+        <!-- شاشة الإعداد -->
+        <div id="setup-view" class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl fade-in">
+            <header class="text-center mb-6">
+                <h1 class="text-4xl font-bold text-blue-600">ملك المعلومات</h1>
+                <p class="text-gray-500 mt-1">لعبة الذكاء والمعرفة العامة</p>
+            </header>
+
+            <div class="mb-6">
+                <h2 class="text-xl font-bold mb-3 text-gray-700">أضف اللاعبين</h2>
+                <div class="flex gap-2">
+                    <input type="text" id="player-name-input" placeholder="أدخل اسم اللاعب" class="flex-grow p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 transition">
+                    <button id="add-player-btn" class="bg-blue-500 text-white font-bold py-3 px-5 rounded-lg hover:bg-blue-600 transition shadow">إضافة</button>
+                </div>
+                <ul id="player-list" class="list-none p-0 mt-3 space-y-2"></ul>
+            </div>
+            
+            <div class="mb-8">
+                <h2 class="text-xl font-bold mb-3 text-gray-700">اختر الفئات</h2>
+                <div id="category-selection" class="grid grid-cols-2 gap-3">
+                    <!-- Categories will be added here by JS -->
+                </div>
+            </div>
+
+            <button id="start-game-btn" class="w-full bg-teal-500 text-white font-black py-4 px-8 rounded-lg hover:bg-teal-600 transition shadow-lg text-2xl disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>ابدأ اللعبة</button>
+        </div>
+
+        <!-- شاشة تمرير الهاتف -->
+        <div id="pass-phone-view" class="hidden bg-white p-8 rounded-2xl shadow-xl text-center fade-in">
+            <h2 id="pass-to-player-name" class="text-3xl font-bold text-gray-800 mb-2"></h2>
+            <p id="pass-info" class="text-lg text-gray-600 mb-6"></p>
+            <button id="start-turn-btn" class="w-full bg-teal-500 text-white font-bold py-4 px-8 rounded-lg hover:bg-teal-600 transition shadow-lg text-2xl">أنا جاهز!</button>
+        </div>
+
+        <!-- شاشة اللعب (الأسئلة) -->
+        <div id="game-view" class="hidden bg-white p-6 sm:p-8 rounded-2xl shadow-xl fade-in">
+            <div class="flex justify-between items-center mb-2 text-gray-600 font-bold">
+                <div id="player-turn-name"></div>
+                <div id="question-counter"></div>
+            </div>
+            <div id="timer-bar" class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+                <div id="timer-bar-inner" class="bg-blue-600 h-2.5 rounded-full" style="width: 100%"></div>
+            </div>
+            <div class="bg-gray-100 p-6 rounded-lg mb-6 min-h-[100px] flex items-center justify-center">
+                <h2 id="question-text" class="text-2xl text-center font-semibold"></h2>
+            </div>
+            <div id="options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Options will be injected here -->
+            </div>
+        </div>
+
+        <!-- شاشة نهاية الجولة / كسر التعادل -->
+        <div id="round-end-view" class="hidden bg-white p-8 rounded-2xl shadow-xl text-center fade-in">
+            <h2 id="round-end-title" class="text-3xl font-bold text-blue-600 mb-4"></h2>
+            <p class="text-lg text-gray-600 mb-6">النتائج النهائية للجولة:</p>
+            <ul id="round-scores" class="space-y-3 text-lg mb-8">
+                <!-- Scores will be injected here -->
+            </ul>
+            <button id="next-action-btn" class="w-full bg-blue-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-600 transition shadow-lg text-xl"></button>
+        </div>
+        
+        <!-- شاشة الفائز النهائي -->
+        <div id="winner-view" class="hidden bg-white p-8 rounded-2xl shadow-xl text-center fade-in">
+            <div class="text-amber-400 text-6xl mb-4">👑</div>
+            <h2 class="text-4xl font-black text-amber-500 mb-2">الفائز هو!</h2>
+            <p id="winner-name" class="text-5xl font-bold text-gray-800 mb-8"></p>
+            <button id="play-again-btn" class="w-full bg-teal-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-teal-600 transition">العب مرة أخرى</button>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- بنك الأسئلة (نفس البنك السابق) ---
+            const QUESTIONS = {
+                general: { name: "معلومات عامة", items: [ { q: "ما هي عاصمة مصر؟", o: ["القاهرة", "الإسكندرية", "الجيزة", "الأقصر"], a: "القاهرة" }, { q: "من رسم الموناليزا؟", o: ["فان جوخ", "بيكاسو", "ليوناردو دافنشي", "مايكل أنجلو"], a: "ليوناردو دافنشي" }, { q: "ما هي العملة الرسمية لليابان؟", o: ["اليوان", "الوون", "الدولار", "الين"], a: "الين" }, { q: "في أي رياضة يُعرف محمد علي كلاي؟", o: ["كرة القدم", "الملاكمة", "كرة السلة", "التنس"], a: "الملاكمة" }, { q: "ما هي الدولة التي تشتهر ببرج إيفل؟", o: ["إيطاليا", "إسبانيا", "فرنسا", "ألمانيا"], a: "فرنسا" }, { q: "ما هي اللغة الأكثر تحدثًا في العالم؟", o: ["الإنجليزية", "الإسبانية", "الصينية الماندرين", "الهندية"], a: "الصينية الماندرين" }, { q: "ما هو اسم أكبر صحراء حارة في العالم؟", o: ["الصحراء العربية", "صحراء جوبي", "الصحراء الكبرى", "صحراء كالاهاري"], a: "الصحراء الكبرى" }, { q: "من هو مخترع المصباح الكهربائي؟", o: ["نيكولا تيسلا", "ألكسندر جراهام بيل", "توماس إديسون", "ماري كوري"], a: "توماس إديسون" }, { q: "ما هو الشعار الأولمبي؟", o: ["أسرع، أعلى، أقوى", "المشاركة هي الأهم", "روح الفريق", "لا تستسلم أبداً"], a: "أسرع، أعلى، أقوى" }, ] },
+                science: { name: "علوم وتكنولوجيا", items: [ { q: "كم عدد قارات العالم؟", o: ["5", "6", "7", "8"], a: "7" }, { q: "ما هو أكبر كوكب في المجموعة الشمسية؟", o: ["الأرض", "المريخ", "المشتري", "زحل"], a: "المشتري" }, { q: "ما هو الرمز الكيميائي للماء؟", o: ["H2O", "CO2", "O2", "NaCl"], a: "H2O" }, { q: "ما هو أسرع حيوان بري؟", o: ["الأسد", "الفهد", "الغزال", "الحصان"], a: "الفهد" }, { q: "ما هي القوة التي تجذب الأجسام نحو بعضها البعض؟", o: ["الاحتكاك", "الجاذبية", "المغناطيسية", "الكهرباء"], a: "الجاذبية" }, { q: "ماذا يسمى العلم الذي يدرس الكائنات الحية؟", o: ["الكيمياء", "الفيزياء", "الأحياء (البيولوجيا)", "الفلك"], a: "الأحياء (البيولوجيا)" }, { q: "ما هو العنصر الأكثر وفرة في الغلاف الجوي للأرض؟", o: ["الأكسجين", "الهيدروجين", "ثاني أكسيد الكربون", "النيتروجين"], a: "النيتروجين" }, { q: "ما هي الشركة التي طورت نظام التشغيل 'ويندوز'؟", o: ["آبل", "جوجل", "مايكروسوفت", "آي بي إم"], a: "مايكروسوفت" }, ] },
+                history: { name: "تاريخ وجغرافيا", items: [ { q: "من هو أول إنسان مشى على سطح القمر؟", o: ["باز ألدرين", "يوري جاجارين", "نيل أرمسترونج", "مايكل كولينز"], a: "نيل أرمسترونج" }, { q: "ما هو أطول نهر في العالم؟", o: ["الأمازون", "النيل", "المسيسيبي", "اليانغتسي"], a: "النيل" }, { q: "في أي قارة تقع دولة اليونان؟", o: ["آسيا", "أفريقيا", "أوروبا", "أستراليا"], a: "أوروبا" }, { q: "من هو القائد الذي بنى إمبراطورية المغول؟", o: ["الإسكندر الأكبر", "يوليوس قيصر", "جنكيز خان", "نابليون بونابرت"], a: "جنكيز خان" }, { q: "ما هي الحضارة التي بنت الأهرامات في مصر؟", o: ["السومرية", "الرومانية", "الإغريقية", "المصرية القديمة"], a: "المصرية القديمة" }, { q: "ما هو أكبر محيط في العالم؟", o: ["الأطلسي", "الهندي", "الهادئ", "المتجمد الشمالي"], a: "الهادئ" }, ] },
+                islamic: { name: "إسلاميات", items: [ { q: "ما هي أول سورة نزلت في القرآن الكريم كاملة؟", o: ["العلق", "الفاتحة", "الإخلاص", "الكوثر"], a: "الفاتحة" }, { q: "من هو الصحابي الذي لقب بـ 'سيف الله المسلول'؟", o: ["عمر بن الخطاب", "علي بن أبي طالب", "خالد بن الوليد", "أبو بكر الصديق"], a: "خالد بن الوليد" }, { q: "كم عدد أركان الإسلام؟", o: ["أربعة", "خمسة", "ستة", "سبعة"], a: "خمسة" }, { q: "ما هي الصلاة التي تصلى بدون ركوع أو سجود؟", o: ["صلاة العيد", "صلاة الجنازة", "صلاة الاستسقاء", "صلاة الكسوف"], a: "صلاة الجنازة" }, { q: "في أي مدينة ولد النبي محمد صلى الله عليه وسلم؟", o: ["المدينة المنورة", "الطائف", "مكة المكرمة", "القدس"], a: "مكة المكرمة" }, { q: "ما هو اسم الغار الذي كان يتعبد فيه النبي قبل البعثة؟", o: ["غار ثور", "غار حراء", "غار أحد", "غار بدر"], a: "غار حراء" }, { q: "من هي أول زوجات النبي محمد صلى الله عليه وسلم؟", o: ["عائشة بنت أبي بكر", "حفصة بنت عمر", "خديجة بنت خويلد", "مارية القبطية"], a: "خديجة بنت خويلد" }, { q: "ما هو الشهر الذي يصوم فيه المسلمون؟", o: ["رجب", "شعبان", "رمضان", "شوال"], a: "رمضان" }, ] },
+                hard: { name: "أسئلة صعبة", items: [ { q: "في أي عام انتهت الحرب العالمية الثانية؟", o: ["1943", "1945", "1947", "1950"], a: "1945" }, { q: "ما هو العنصر الذي يمتلك الرمز الكيميائي 'Au'؟", o: ["الفضة", "الذهب", "النحاس", "الألومنيوم"], a: "الذهب" }, { q: "من كتب 'مقدمة ابن خلدون'؟", o: ["ابن سينا", "الفارابي", "ابن خلدون", "ابن رشد"], a: "ابن خلدون" }, { q: "كم عدد عظام جسم الإنسان البالغ؟", o: ["206", "212", "300", "198"], a: "206" }, { q: "ما هي الدولة التي كانت تعرف سابقًا باسم بلاد فارس؟", o: ["العراق", "تركيا", "إيران", "سوريا"], a: "إيران" }, { q: "ما هو أعمق خندق محيطي في العالم؟", o: ["خندق تونغا", "خندق الفلبين", "خندق كرماديك", "خندق ماريانا"], a: "خندق ماريانا" }, { q: "ما هو الاسم العلمي لفيتامين C؟", o: ["حمض الفوليك", "الريتينول", "حمض الأسكوربيك", "الكالسيفيرول"], a: "حمض الأسكوربيك" }, { q: "من هو مخرج فيلم 'Parasite' الحائز على جائزة الأوسكار؟", o: ["كوينتن تارانتينو", "بونغ جون هو", "مارتن سكورسيزي", "كريستوفر نولان"], a: "بونغ جون هو" }, ] }
+            };
+            const QUESTION_TIME = 15; // 15 seconds
+
+            // --- متغيرات الحالة ---
+            let gameState = {};
+            let timerInterval;
+
+            // --- المؤثرات الصوتية ---
+            let sounds = {};
+            let audioReady = false;
+
+            function setupAudio() {
+                sounds.tick = new Tone.Synth({ oscillator: { type: "sine" }, envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 } }).toDestination();
+                sounds.timeUp = new Tone.Synth({ oscillator: { type: "square" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } }).toDestination();
+                sounds.click = new Tone.MembraneSynth().toDestination();
+                sounds.nextPlayer = new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } }).toDestination();
+                audioReady = true;
+            }
+
+            // --- عناصر الواجهة ---
+            const views = { setup: document.getElementById('setup-view'), passPhone: document.getElementById('pass-phone-view'), game: document.getElementById('game-view'), roundEnd: document.getElementById('round-end-view'), winner: document.getElementById('winner-view') };
+            const playerNameInput = document.getElementById('player-name-input');
+            const addPlayerBtn = document.getElementById('add-player-btn');
+            const playerList = document.getElementById('player-list');
+            const categorySelection = document.getElementById('category-selection');
+            const startGameBtn = document.getElementById('start-game-btn');
+            const passToPlayerName = document.getElementById('pass-to-player-name');
+            const passInfo = document.getElementById('pass-info');
+            const startTurnBtn = document.getElementById('start-turn-btn');
+            const playerTurnName = document.getElementById('player-turn-name');
+            const questionCounter = document.getElementById('question-counter');
+            const timerBarInner = document.getElementById('timer-bar-inner');
+            const questionText = document.getElementById('question-text');
+            const optionsContainer = document.getElementById('options-container');
+            const roundEndTitle = document.getElementById('round-end-title');
+            const roundScores = document.getElementById('round-scores');
+            const nextActionBtn = document.getElementById('next-action-btn');
+            const winnerName = document.getElementById('winner-name');
+            const playAgainBtn = document.getElementById('play-again-btn');
+
+            function init() {
+                gameState = { players: [], activePlayers: [], selectedCategories: [], questionPool: [], turnIndex: 0, questionsPerRound: 10, isTieBreaker: false, };
+                renderPlayerList();
+                renderCategories();
+                showView('setup');
+            }
+
+            function showView(viewName) {
+                Object.values(views).forEach(view => view.classList.add('hidden'));
+                views[viewName].classList.remove('hidden');
+            }
+
+            function renderPlayerList() {
+                playerList.innerHTML = '';
+                gameState.players.forEach((player, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'flex justify-between items-center bg-gray-100 p-2 rounded-lg text-lg';
+                    li.textContent = player.name;
+                    const removeBtn = document.createElement('button');
+                    removeBtn.textContent = '×';
+                    removeBtn.className = 'text-red-500 font-bold text-2xl hover:text-red-700';
+                    removeBtn.onclick = () => removePlayer(index);
+                    li.appendChild(removeBtn);
+                    playerList.appendChild(li);
+                });
+                validateSetup();
+            }
+            
+            function renderCategories() {
+                categorySelection.innerHTML = '';
+                Object.keys(QUESTIONS).forEach(key => {
+                    if (key === 'hard') return;
+                    const category = QUESTIONS[key];
+                    const div = document.createElement('div');
+                    div.innerHTML = `<input type="checkbox" id="cat-${key}" value="${key}" class="hidden peer"><label for="cat-${key}" class="block text-center font-bold p-4 border-2 border-gray-300 rounded-lg cursor-pointer transition peer-checked:bg-blue-500 peer-checked:text-white peer-checked:border-blue-500">${category.name}</label>`;
+                    div.querySelector('input').addEventListener('change', handleCategoryChange);
+                    categorySelection.appendChild(div);
+                });
+            }
+            
+            function handleCategoryChange(event) {
+                const { value, checked } = event.target;
+                if (checked) {
+                    gameState.selectedCategories.push(value);
+                } else {
+                    gameState.selectedCategories = gameState.selectedCategories.filter(cat => cat !== value);
+                }
+                validateSetup();
+            }
+
+            function validateSetup() {
+                startGameBtn.disabled = !(gameState.players.length >= 1 && gameState.selectedCategories.length > 0);
+            }
+
+            function addPlayer() {
+                const name = playerNameInput.value.trim();
+                if (name) {
+                    gameState.players.push({ name, score: 0, questionsAnswered: 0 });
+                    playerNameInput.value = '';
+                    renderPlayerList();
+                }
+                playerNameInput.focus();
+            }
+
+            function removePlayer(index) {
+                gameState.players.splice(index, 1);
+                renderPlayerList();
+            }
+
+            function startGame() {
+                if (!audioReady) setupAudio(); // Initialize audio on first user interaction
+                let basePool = [];
+                gameState.selectedCategories.forEach(catKey => { basePool.push(...QUESTIONS[catKey].items); });
+                gameState.questionPool = [...basePool].sort(() => 0.5 - Math.random());
+                gameState.activePlayers = [...gameState.players];
+                gameState.activePlayers.forEach(p => { p.score = 0; p.questionsAnswered = 0; });
+                gameState.isTieBreaker = false;
+                gameState.questionsPerRound = 10;
+                gameState.turnIndex = 0;
+                prepareTurn();
+            }
+
+            function prepareTurn() {
+                const currentPlayer = gameState.activePlayers[gameState.turnIndex % gameState.activePlayers.length];
+                if (currentPlayer.questionsAnswered >= gameState.questionsPerRound) {
+                    endRound();
+                    return;
+                }
+                if (audioReady) sounds.nextPlayer.triggerAttackRelease("C4", "0.2");
+                passToPlayerName.textContent = `دور ${currentPlayer.name}`;
+                passInfo.textContent = gameState.isTieBreaker ? `استعد لسؤال كسر التعادل!` : `استعد لسؤالك رقم ${currentPlayer.questionsAnswered + 1}`;
+                showView('passPhone');
+            }
+
+            function startTurn() {
+                displayQuestion();
+                showView('game');
+            }
+
+            function displayQuestion() {
+                if (gameState.questionPool.length === 0) {
+                    let basePool = [];
+                    gameState.selectedCategories.forEach(catKey => { basePool.push(...QUESTIONS[catKey].items); });
+                    gameState.questionPool = [...basePool].sort(() => 0.5 - Math.random());
+                }
+                const question = gameState.isTieBreaker ? [...QUESTIONS.hard.items].sort(() => 0.5 - Math.random())[0] : gameState.questionPool.pop();
+                gameState.currentQuestion = question;
+                const currentPlayer = gameState.activePlayers[gameState.turnIndex % gameState.activePlayers.length];
+                playerTurnName.textContent = currentPlayer.name;
+                questionCounter.textContent = `السؤال ${currentPlayer.questionsAnswered + 1} / ${gameState.questionsPerRound}`;
+                questionText.textContent = question.q;
+                optionsContainer.innerHTML = '';
+                const shuffledOptions = [...question.o].sort(() => 0.5 - Math.random());
+                shuffledOptions.forEach(option => {
+                    const button = document.createElement('button');
+                    button.textContent = option;
+                    button.className = 'option-btn w-full text-lg font-semibold p-4 border-2 border-gray-300 rounded-lg bg-white hover:bg-gray-100';
+                    button.onclick = () => handleAnswer(option);
+                    optionsContainer.appendChild(button);
+                });
+                startTimer();
+            }
+
+            function startTimer() {
+                let timeLeft = QUESTION_TIME;
+                timerBarInner.style.width = '100%';
+                timerBarInner.classList.remove('bg-red-500');
+                timerBarInner.classList.add('bg-blue-600');
+
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    const percentage = (timeLeft / QUESTION_TIME) * 100;
+                    timerBarInner.style.width = `${percentage}%`;
+
+                    if (timeLeft <= 5) {
+                        timerBarInner.classList.remove('bg-blue-600');
+                        timerBarInner.classList.add('bg-red-500');
+                        if (audioReady) sounds.tick.triggerAttackRelease("C5", "0.1");
+                    }
+
+                    if (timeLeft <= 0) {
+                        handleTimeUp();
+                    }
+                }, 1000);
+            }
+
+            function stopTimer() {
+                clearInterval(timerInterval);
+            }
+
+            function handleTimeUp() {
+                stopTimer();
+                if (audioReady) sounds.timeUp.triggerAttackRelease("A3", "0.3");
+                const currentPlayer = gameState.activePlayers[gameState.turnIndex % gameState.activePlayers.length];
+                currentPlayer.questionsAnswered++;
+                setTimeout(() => {
+                    gameState.turnIndex++;
+                    prepareTurn();
+                }, 300);
+            }
+
+            function handleAnswer(selectedOption) {
+                stopTimer();
+                if (audioReady) sounds.click.triggerAttackRelease("C3", "0.1");
+                const currentPlayer = gameState.activePlayers[gameState.turnIndex % gameState.activePlayers.length];
+                const correctAnswer = gameState.currentQuestion.a;
+                if (selectedOption === correctAnswer) {
+                    currentPlayer.score++;
+                }
+                currentPlayer.questionsAnswered++;
+                setTimeout(() => {
+                    gameState.turnIndex++;
+                    prepareTurn();
+                }, 300);
+            }
+
+            function endRound() {
+                const sortedPlayers = [...gameState.activePlayers].sort((a, b) => b.score - a.score);
+                const highestScore = sortedPlayers.length > 0 ? sortedPlayers[0].score : 0;
+                const tiedPlayers = sortedPlayers.filter(p => p.score === highestScore);
+                roundScores.innerHTML = '';
+                sortedPlayers.forEach(p => {
+                    const li = document.createElement('li');
+                    li.className = `flex justify-between items-center p-3 rounded-lg ${p.score === highestScore ? 'bg-amber-100 font-bold' : 'bg-gray-100'}`;
+                    li.innerHTML = `<span>${p.name}</span><span>${p.score} نقطة</span>`;
+                    roundScores.appendChild(li);
+                });
+                if (tiedPlayers.length === 1) {
+                    winnerName.textContent = tiedPlayers[0].name;
+                    showView('winner');
+                } else {
+                    roundEndTitle.textContent = "كسر التعادل!";
+                    nextActionBtn.textContent = "ابدأ جولة كسر التعادل";
+                    nextActionBtn.onclick = () => startTieBreaker(tiedPlayers);
+                    showView('roundEnd');
+                }
+            }
+
+            function startTieBreaker(tiedPlayers) {
+                gameState.activePlayers = tiedPlayers;
+                gameState.activePlayers.forEach(p => { p.score = 0; p.questionsAnswered = 0; });
+                gameState.isTieBreaker = true;
+                gameState.questionsPerRound = 5;
+                gameState.turnIndex = 0;
+                prepareTurn();
+            }
+
+            // --- Event Listeners ---
+            addPlayerBtn.addEventListener('click', addPlayer);
+            playerNameInput.addEventListener('keypress', (e) => e.key === 'Enter' && addPlayer());
+            startGameBtn.addEventListener('click', startGame);
+            startTurnBtn.addEventListener('click', () => {
+                if (!audioReady) {
+                    Tone.start();
+                    setupAudio();
+                }
+                startTurn();
+            });
+            playAgainBtn.addEventListener('click', init);
+
+            // --- Initial Load ---
+            init();
+        });
+    </script>
+
+</body>
+</html>
