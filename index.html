@@ -24,47 +24,47 @@
             background-position: center;
         }
         .game-card:hover {
-            transform: translateY(-10px);
+            transform: translateY(-5px) scale(1.02);
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
         .game-card-overlay {
-            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.1) 60%, rgba(0,0,0,0) 100%);
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.1) 60%, rgba(0,0,0,0) 100%);
         }
     </style>
 </head>
 <body class="main-menu-body">
 
-    <div id="main-menu" class="container mx-auto p-4 sm:p-8">
-        <header class="text-center mb-12">
-            <h1 class="text-5xl font-black ">مركز الألعاب العربية</h1>
-            <p class="text-gray-500 mt-2 text-xl">اختر لعبتك المفضلة وابدأ التحدي!</p>
+    <div id="main-menu" class="container mx-auto p-4 sm:p-6">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl sm:text-5xl font-black ">مركز الألعاب العربية</h1>
+            <p class="text-gray-500 mt-2 text-lg sm:text-xl">اختر لعبتك المفضلة وابدأ التحدي!</p>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <!-- Game Card 1: ملك المعلومات -->
-            <div id="start-quiz-game" class="game-card rounded-2xl shadow-lg overflow-hidden cursor-pointer h-80 flex flex-col justify-end text-white p-6" style="background-image: url('https://placehold.co/600x800/007BFF/FFFFFF?text=؟&font=cairo');">
+            <div id="start-quiz-game" class="game-card rounded-2xl shadow-lg overflow-hidden cursor-pointer h-56 sm:h-64 flex flex-col justify-end text-white p-4 sm:p-6" style="background-image: url('https://placehold.co/400x600/007BFF/FFFFFF?text=🧠&font=cairo');">
                  <div class="game-card-overlay absolute inset-0"></div>
                  <div class="relative z-10">
-                    <h2 class="text-3xl font-bold">ملك المعلومات</h2>
-                    <p>اختبر معلوماتك في مختلف المجالات وتحدى أصدقائك.</p>
+                    <h2 class="text-lg sm:text-xl font-bold">ملك المعلومات</h2>
+                    <p class="text-xs text-gray-200">اختبر معلوماتك وتحدى أصدقائك.</p>
                 </div>
             </div>
 
             <!-- Game Card 2: عجلة الحظ -->
-            <div id="start-wheel-game" class="game-card rounded-2xl shadow-lg overflow-hidden cursor-pointer h-80 flex flex-col justify-end text-white p-6" style="background-image: url('https://placehold.co/600x800/E91E63/FFFFFF?text=🎡&font=cairo');">
+            <div id="start-wheel-game" class="game-card rounded-2xl shadow-lg overflow-hidden cursor-pointer h-56 sm:h-64 flex flex-col justify-end text-white p-4 sm:p-6" style="background-image: url('https://placehold.co/400x600/E91E63/FFFFFF?text=🎡&font=cairo');">
                  <div class="game-card-overlay absolute inset-0"></div>
                  <div class="relative z-10">
-                    <h2 class="text-3xl font-bold">عجلة الحظ المصرية</h2>
-                    <p>صراحة وأحكام بلمسة مصرية.. ادّيها لفة وشوف حظك!</p>
+                    <h2 class="text-lg sm:text-xl font-bold">عجلة الحظ</h2>
+                    <p class="text-xs text-gray-200">صراحة وأحكام بلمسة مصرية.</p>
                 </div>
             </div>
             
             <!-- Game Card 3: مين فينا...؟ -->
-            <div id="start-who-is-more-likely-game" class="game-card rounded-2xl shadow-lg overflow-hidden cursor-pointer h-80 flex flex-col justify-end text-white p-6" style="background-image: url('https://placehold.co/600x800/ec4899/FFFFFF?text=🧑‍🤝‍🧑&font=cairo');">
+            <div id="start-who-is-more-likely-game" class="game-card rounded-2xl shadow-lg overflow-hidden cursor-pointer h-56 sm:h-64 flex flex-col justify-end text-white p-4 sm:p-6" style="background-image: url('https://placehold.co/400x600/ec4899/FFFFFF?text=🧑‍🤝‍🧑&font=cairo');">
                  <div class="game-card-overlay absolute inset-0"></div>
                  <div class="relative z-10">
-                    <h2 class="text-3xl font-bold">مين فينا...؟</h2>
-                    <p>لعبة التفاهم بين الصحاب أو المرتبطين.</p>
+                    <h2 class="text-lg sm:text-xl font-bold">مين فينا...؟</h2>
+                    <p class="text-xs text-gray-200">لعبة التفاهم بين الصحاب.</p>
                 </div>
             </div>
         </div>
